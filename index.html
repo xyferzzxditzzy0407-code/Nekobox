@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#09070b">
+  <title>Xyferzz CDN</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <main class="container">
+
+    <header class="site-header">
+      <div class="brand-mark">X</div>
+
+      <div class="brand-copy">
+        <h1>Xyferzz <span>CDN</span></h1>
+        <p>Upload foto atau video, langsung dapet<br>
+        direct link buat ngoding.</p>
+      </div>
+
+      <div class="theme-icon">☾</div>
+    </header>
+
+    <section id="drop-zone" class="drop-zone">
+      <input type="file" id="file-input"
+        accept="image/*,video/*" hidden>
+
+      <div class="drop-content">
+        <div class="upload-icon">
+          <svg viewBox="0 0 64 64">
+            <path d="M14 20a5 5 0 0 1 5-5h11l5 6h16a5 5 0 0 1 5 5v22a5 5 0 0 1-5 5H19a5 5 0 0 1-5-5z"/>
+            <path class="arrow" d="M32 43V27m-8 8 8-8 8 8"/>
+          </svg>
+        </div>
+
+        <h3>Drag &amp; Drop file ke sini</h3>
+        <p>atau <span id="browse-btn">klik untuk pilih file</span></p>
+
+        <small class="format-note">
+          <span class="format-icon">▧</span>
+          Mendukung JPG, PNG, GIF, WEBP, MP4, WEBM
+        </small>
+      </div>
+    </section>
+
+    <div id="file-info" class="file-info hidden">
+      <span id="file-name">nama-file.jpg</span>
+      <button id="upload-btn" class="btn-primary">
+        Upload &amp; Buat Link
+      </button>
+    </div>
+
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p>Lagi nge-upload ke server...</p>
+    </div>
+
+    <section id="result-box" class="result-box hidden">
+
+      <h3 class="success-title">
+        <span class="success-check">✓</span>
+        Berhasil! <span>Ini Link Kamu:</span>
+      </h3>
+
+      <div id="preview-container" class="preview-container"></div>
+
+      <div class="copy-group">
+        <label for="direct-url">
+          <span class="field-icon">↗</span>
+          Direct URL (Untuk CSS / src):
+        </label>
+
+        <div class="input-wrapper">
+          <input type="text" id="direct-url" readonly>
+          <button class="btn-copy" data-target="direct-url">
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <div class="copy-group">
+        <label for="html-tag">
+          <span class="field-icon">&lt;/&gt;</span>
+          Tag HTML Siap Pakai:
+        </label>
+
+        <div class="input-wrapper">
+          <input type="text" id="html-tag" readonly>
+          <button class="btn-copy" data-target="html-tag">
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <button id="reset-btn" class="btn-secondary">
+        ☁ Upload File Lain
+      </button>
+
+    </section>
+
+    <footer class="site-footer">
+      <div class="footer-promise">
+        <span>ϟ</span> Cepat <i></i> Aman <i></i> Gratis
+      </div>
+
+      <p>Made with <span class="heart">♥</span> by
+        <strong>Xyferzz</strong>
+      </p>
+    </footer>
+
+  </main>
+
+  <script src="xyferzz.js"></script>
+</body>
+</html>
