@@ -1,14 +1,33 @@
+
 // ========================================================
-// KONFIGURASI SUPABASE (Ganti dengan punya kamu nanti!)
+// XYFERZZ CDN — SUPABASE MEDIA UPLOADER
 // ========================================================
+
 const SUPABASE_URL = 'https://usfqvarxbxfnhnkpcnss.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_yS68uH4IL2cBSFHbO-KwHg_iYVjAqBP';
-const BUCKET_NAME = 'media-publik'; // Pastikan nama bucket di Supabase sama persis
 
-// Inisialisasi Client Supabase
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_ANON_KEY =
+  'sb_publishable_yS68uH4IL2cBSFHbO-KwHg_iYVjAqBP';
 
-// Ambil Elemen DOM
+const BUCKET_NAME = 'media-publik';
+
+// ========================================================
+// INITIALIZE SUPABASE
+// ========================================================
+
+if (!window.supabase || !window.supabase.createClient) {
+  alert('Supabase CDN gagal dimuat!');
+  throw new Error('Supabase library tidak ditemukan.');
+}
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+// ========================================================
+// DOM ELEMENTS
+// ========================================================
+
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 const fileInfo = document.getElementById('file-info');
@@ -21,10 +40,37 @@ const directUrlInput = document.getElementById('direct-url');
 const htmlTagInput = document.getElementById('html-tag');
 const resetBtn = document.getElementById('reset-btn');
 
+// ========================================================
+// CHECK HTML ELEMENTS
+// ========================================================
+
+const requiredElements = [
+  dropZone,
+  fileInput,
+  fileInfo,
+  fileNameDisplay,
+  uploadBtn,
+  loading,
+  resultBox,
+  previewContainer,
+  directUrlInput,
+  htmlTagInput,
+  resetBtn
+];
+
+if (requiredElements.some(el => !el)) {
+  throw new Error('Ada ID HTML yang tidak ditemukan!');
+}
+
 let selectedFile = null;
 
-// Event Klik & Drag-and-Drop
-dropZone.addEventListener('click', () => fileInput.click());
+// ========================================================
+// FILE SELECTION
+// ========================================================
+
+dropZone.addEventListener('click', () => {
+  fileInput.click();
+});
 
 dropZone.addEventListener('dragover', (e) => {
   e.preventDefault();
@@ -38,6 +84,7 @@ dropZone.addEventListener('dragleave', () => {
 dropZone.addEventListener('drop', (e) => {
   e.preventDefault();
   dropZone.classList.remove('dragover');
+
   if (e.dataTransfer.files.length > 0) {
     handleFileSelection(e.dataTransfer.files[0]);
   }
@@ -49,106 +96,254 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
+// ========================================================
+// HANDLE FILE
+// ========================================================
+
 function handleFileSelection(file) {
-  if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-    alert('Cuma bisa upload file foto atau video ya!');
+
+  if (
+    !file.type.startsWith('image/') &&
+    !file.type.startsWith('video/')
+  ) {
+    alert('Cuma bisa upload foto atau video!');
+    fileInput.value = '';
     return;
   }
+
   selectedFile = file;
+
   fileNameDisplay.textContent = file.name;
+
   fileInfo.classList.remove('hidden');
   resultBox.classList.add('hidden');
 }
 
-// Proses Upload ke Supabase
+// ========================================================
+// GENERATE UNIQUE FILE NAME
+// ========================================================
+
+function generateUniqueFileName(file) {
+
+  const extension = file.name.includes('.')
+    ? file.name.split('.').pop().toLowerCase()
+    : '';
+
+  const randomString =
+    typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : Date.now() + '-' + Math.random().toString(36).substring(2, 12);
+
+  return extension
+    ? `${randomString}.${extension}`
+    : randomString;
+}
+
+// ========================================================
+// UPLOAD TO SUPABASE
+// ========================================================
+
 uploadBtn.addEventListener('click', async () => {
-  if (!selectedFile) return;
+
+  if (!selectedFile) {
+    alert('Pilih file terlebih dahulu!');
+    return;
+  }
+
+  const fileToUpload = selectedFile;
 
   fileInfo.classList.add('hidden');
   dropZone.classList.add('hidden');
   loading.classList.remove('hidden');
 
-  try {
-    // 1. Deklarasi uniqueFileName di sini biar dikenali
-    const randomString = Math.random().toString(36).substring(2, 10);
-    const fileExtension = selectedFile.name.split('.').pop();
-    const uniqueFileName = `${randomString}.${fileExtension}`;
+  uploadBtn.disabled = true;
 
-    // 2. Upload ke Supabase
+  try {
+
+    // 1. Generate unique filename
+    const uniqueFileName = generateUniqueFileName(fileToUpload);
+
+    // 2. Upload to Supabase
     const { data, error } = await supabaseClient.storage
       .from(BUCKET_NAME)
-      .upload(uniqueFileName, selectedFile, {
+      .upload(uniqueFileName, fileToUpload, {
         cacheControl: '3600',
+        contentType: fileToUpload.type,
         upsert: false
       });
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-    // 3. Buat link pendek versi Vercel (/file/...)
-    const shortUrl = `${window.location.origin}/file/${uniqueFileName}`;
-    
-    tampilkanHasil(shortUrl, selectedFile.type);
+    // 3. Get uploaded path
+    const uploadedPath = data.path;
+
+    // 4. Encode file path
+    const encodedPath = uploadedPath
+      .split('/')
+      .map(segment => encodeURIComponent(segment))
+      .join('/');
+
+    // 5. Generate short URL
+    const shortUrl =
+      `${window.location.origin}/file/${encodedPath}`;
+
+    // 6. Display result
+    tampilkanHasil(shortUrl, fileToUpload.type);
+
+    console.log('UPLOAD SUCCESS');
+    console.log('File:', uploadedPath);
+    console.log('URL:', shortUrl);
 
   } catch (err) {
-    console.error(err);
-    alert(`Gagal upload: ${err.message}\n\nPastikan SUPABASE_URL, KEY, dan Policy Bucket sudah benar.`);
-    resetTampilan();
+
+    console.error('UPLOAD ERROR:', err);
+
+    alert(
+      `Gagal upload: ${err.message}\n\n` +
+      'Periksa Supabase URL, KEY, Bucket, dan Storage Policy.'
+    );
+
+    fileInfo.classList.remove('hidden');
+    dropZone.classList.remove('hidden');
+
   } finally {
+
     loading.classList.add('hidden');
+    uploadBtn.disabled = false;
+
   }
+
 });
 
+// ========================================================
+// DISPLAY RESULT
+// ========================================================
 
-// Tampilkan Preview & Link
 function tampilkanHasil(url, mimeType) {
-const shortUrl = `${window.location.origin}/file/${uniqueFileName}`;
-directUrlInput.value = shortUrl;
- previewContainer.innerHTML = '';
+
+  // URL dikirim melalui parameter
+  directUrlInput.value = url;
+
+  previewContainer.innerHTML = '';
 
   if (mimeType.startsWith('image/')) {
-    htmlTagInput.value = `<img src="${url}" alt="media" />`;
+
+    htmlTagInput.value =
+      `<img src="${url}" alt="media" />`;
+
     const img = document.createElement('img');
+
     img.src = url;
+    img.alt = 'Uploaded image';
+    img.loading = 'lazy';
+
     previewContainer.appendChild(img);
+
   } else if (mimeType.startsWith('video/')) {
-    htmlTagInput.value = `<video src="${url}" controls></video>`;
+
+    htmlTagInput.value =
+      `<video src="${url}" controls playsinline></video>`;
+
     const video = document.createElement('video');
+
     video.src = url;
     video.controls = true;
+    video.playsInline = true;
+
     previewContainer.appendChild(video);
+
   }
 
   resultBox.classList.remove('hidden');
+
 }
 
-// Fitur Tombol Copy
-document.querySelectorAll('.btn-copy').forEach((button) => {
-  button.addEventListener('click', () => {
-    const targetId = button.getAttribute('data-target');
-    const inputEl = document.getElementById(targetId);
+// ========================================================
+// COPY BUTTON
+// ========================================================
 
-    navigator.clipboard.writeText(inputEl.value).then(() => {
+document.querySelectorAll('.btn-copy').forEach((button) => {
+
+  button.addEventListener('click', async () => {
+
+    const targetId = button.getAttribute('data-target');
+    const input = document.getElementById(targetId);
+
+    if (!input) {
+      alert('Input tidak ditemukan!');
+      return;
+    }
+
+    try {
+
+      if (navigator.clipboard && window.isSecureContext) {
+
+        await navigator.clipboard.writeText(input.value);
+
+      } else {
+
+        input.focus();
+        input.select();
+
+        const copied = document.execCommand('copy');
+
+        if (!copied) {
+          throw new Error('Gagal menyalin teks.');
+        }
+
+      }
+
       const originalText = button.textContent;
+
       button.textContent = 'Copied!';
       button.style.backgroundColor = '#22c55e';
       button.style.color = '#0f172a';
 
       setTimeout(() => {
+
         button.textContent = originalText;
         button.style.backgroundColor = '';
         button.style.color = '';
+
       }, 1500);
-    });
+
+    } catch (err) {
+
+      console.error('COPY ERROR:', err);
+      alert('Gagal menyalin link!');
+
+    }
+
   });
+
 });
 
-// Tombol Reset
+// ========================================================
+// RESET
+// ========================================================
+
 resetBtn.addEventListener('click', resetTampilan);
 
 function resetTampilan() {
+
   selectedFile = null;
+
   fileInput.value = '';
+
+  directUrlInput.value = '';
+  htmlTagInput.value = '';
+
+  previewContainer.innerHTML = '';
+
   fileInfo.classList.add('hidden');
   resultBox.classList.add('hidden');
+  loading.classList.add('hidden');
+
   dropZone.classList.remove('hidden');
+
+  uploadBtn.disabled = false;
+
 }
+
