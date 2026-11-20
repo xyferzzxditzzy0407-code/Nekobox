@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xyferzz CDN — Media to Direct Link</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Library Supabase JS dari CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Xyferzz <span>CDN</span></h1>
+      <p>Upload foto atau video, langsung dapet direct link buat ngoding.</p>
+    </header>
+
+    <!-- Area Drag & Drop -->
+    <div id="drop-zone" class="drop-zone">
+      <input type="file" id="file-input" accept="image/*,video/*" hidden />
+      <div class="drop-content">
+        <div class="icon">📁</div>
+        <h3>Drag & Drop file ke sini</h3>
+        <p>atau <span id="browse-btn">klik untuk pilih file</span></p>
+        <small>Mendukung JPG, PNG, GIF, WEBP, MP4, WEBM</small>
+      </div>
+    </div>
+
+    <!-- Info File Terpilih -->
+    <div id="file-info" class="file-info hidden">
+      <span id="file-name">nama-file.jpg</span>
+      <button id="upload-btn" class="btn-primary">Upload & Buat Link</button>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p>Lagi nge-upload ke server...</p>
+    </div>
+
+    <!-- Kotak Hasil -->
+    <div id="result-box" class="result-box hidden">
+      <h3>Berhasil! Ini Link Kamu:</h3>
+
+      <!-- Preview Media -->
+      <div id="preview-container" class="preview-container"></div>
+
+      <!-- Direct URL -->
+      <div class="copy-group">
+        <label>Direct URL (Untuk CSS / src):</label>
+        <div class="input-wrapper">
+          <input type="text" id="direct-url" readonly />
+          <button class="btn-copy" data-target="direct-url">Copy</button>
+        </div>
+      </div>
+
+      <!-- HTML Tag Siap Tempel -->
+      <div class="copy-group">
+        <label>Tag HTML Siap Pakai:</label>
+        <div class="input-wrapper">
+          <input type="text" id="html-tag" readonly />
+          <button class="btn-copy" data-target="html-tag">Copy</button>
+        </div>
+      </div>
+
+      <button id="reset-btn" class="btn-secondary">Upload File Lain</button>
+    </div>
+  </div>
+
+  <script src="xyferzz.js"></script>
+</body>
+</html>
