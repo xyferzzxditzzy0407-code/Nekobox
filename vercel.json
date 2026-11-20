@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/file/:path*",
+      "destination": "https://usfqvarxbxfnhnkpcnss.supabase.co/storage/v1/object/public/media-publik/:path*"
+    }
+  ]
+}
